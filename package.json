@@ -1,0 +1,36 @@
+{
+  "name": "x64",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/EllmanT/revDriver10April24.git"
+  },
+  "author": "tapiwa Ellman",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/EllmanT/revDriver10April24/issues"
+  },
+  "homepage": "https://github.com/EllmanT/revDriver10April24#readme",
+  "dependencies": {
+    "pkg": "^5.8.1"
+  },
+  "pkg": {
+    "scripts": ["main.js"],
+    "targets": [
+      "node14-win-x64"
+    ],
+    "assets": [
+      "RevmaxAPI.dll",
+      "RevmaxAPI.tlb",
+      "RevmaxAPI.pdb"
+    ]
+  },
+  "bin": {
+    "x64": "main.js"
+  }
+}

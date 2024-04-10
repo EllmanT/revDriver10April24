@@ -3,45 +3,84 @@ const path = require("path");
 const os = require("os");
 const readline = require("readline");
 
-//part 0 MMOVING THE APIS///
+// Part 0: MOVING THE APIS
 const currentDirectory = __dirname;
 const sourceFilePath = path.join(currentDirectory, "RevmaxAPI.dll");
 const sourceFilePath2 = path.join(currentDirectory, "RevmaxAPI.tlb");
 const sourceFilePath3 = path.join(currentDirectory, "RevmaxAPI.pdb");
 
 const osDrive =
-  os.platform() === "win32" ? os.homedir().split(path.sep)[0] : "/"; // Get the OS drive letter (C:\ for Windows, / for Unix-like systems)
-const destinationFilePath = path.join(osDrive, "Revmax", "RevmaxAPI.dll");
-const destinationFilePath2 = path.join(osDrive, "Revmax", "RevmaxAPI.tlb");
-const destinationFilePath3 = path.join(osDrive, "Revmax", "RevmaxAPI.pdb");
+  os.platform() === "win32" ? os.homedir().split(path.sep)[0] : "/";
+const destinationFilePath = path.join(
+  osDrive,
+  "Revmax",
+  "Revmax",
+  "RevmaxAPI.dll"
+);
+const destinationFilePath2 = path.join(
+  osDrive,
+  "Revmax",
+  "Revmax",
+  "RevmaxAPI.tlb"
+);
+const destinationFilePath3 = path.join(
+  osDrive,
+  "Revmax",
+  "Revmax",
+  "RevmaxAPI.pdb"
+);
 
-const copyFile = (source, destination) => {
+console.log("");
+
+const copyFile = (source, destination, callback) => {
   fs.access(destination, (err) => {
     if (err) {
-      // File does not exist, copy it
       fs.copyFile(source, destination, (err) => {
         if (err) {
           console.error("Error copying file:", err);
         } else {
-          console.log("File copied successfully!");
+          console.log("\nRevMaxAPI File copied successfully!");
+          callback(); // Call the callback function after copying
         }
       });
     } else {
-      // File exists, replace it
       fs.copyFile(source, destination, (err) => {
         if (err) {
           console.error("Error replacing file:", err);
         } else {
-          console.log("File replaced successfully!");
+          console.log("RevMaxAPI File replaced successfully!");
+          callback(); // Call the callback function after copying
         }
       });
     }
   });
 };
 
-copyFile(sourceFilePath, destinationFilePath);
-copyFile(sourceFilePath2, destinationFilePath2);
-copyFile(sourceFilePath3, destinationFilePath3);
+// Callback function to be called after all files have been copied
+const filesCopiedCallback = () => {
+  console.log("\nPress Enter key to close the program.");
+
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+
+  rl.on("line", (input) => {
+    rl.close(); // Close the readline interface when the user presses Enter
+    console.log("UPDATE DONE!!");
+    console.log("you can now fiscalise in ZIG ;)")
+    // Perform any additional actions or exit the program
+  });
+};
+
+// Copy the files and call the callback function when done
+copyFile(sourceFilePath, destinationFilePath, () => {
+  copyFile(sourceFilePath2, destinationFilePath2, () => {
+    copyFile(sourceFilePath3, destinationFilePath3, filesCopiedCallback);
+  });
+});
+
+
 
 const driverLetter = os.homedir().charAt(0).toUpperCase();
 const filePath = path.join(driverLetter + ":", "Revmax", "settings.ini");
@@ -49,7 +88,7 @@ const filePath = path.join(driverLetter + ":", "Revmax", "settings.ini");
 //part 1  Updating the settings .ini file//
 fs.readFile(filePath, "utf8", (err, data) => {
   if (err) {
-    console.error("Error opening the file:", err);
+    console.error("Error Settings opening the file:", err);
     return;
   }
 
@@ -82,7 +121,7 @@ fs.readFile(filePath, "utf8", (err, data) => {
 
   if (!updatesPerformed) {
     console.log(
-      "Desired changes already exist in the file. No updates performed."
+      "Desired changes already exist in the Settings file. No updates performed."
     );
     return;
   }
@@ -94,13 +133,10 @@ fs.readFile(filePath, "utf8", (err, data) => {
       return;
     }
 
-    console.log("Updates Settings applied successfully!");
-    console.log("File saved successfully.");
+    console.log("Updates for Settings applied successfully!");
+    console.log("Settings File saved successfully.");
 
-    const rl = readline.createInterface({
-      input: process.stdin,
-      output: process.stdout,
-    });
+   
   });
 });
 
@@ -133,8 +169,8 @@ for (const drive of drives) {
   const certificateFolderPath = path.join(driveRoot, certificateFolderName);
   configFilePath = path.join(driveRoot, configFileName);
 
-  console.log(`Checking certificate folder: ${certificateFolderPath}`);
-  console.log(`Checking config file: ${configFilePath}`);
+  console.log(`Checking for certificate folder: ${certificateFolderPath}`);
+  console.log(`Checking for config file: ${configFilePath}`);
 
   // Check if the certificate folder and config.ini file exist
   if (fs.existsSync(certificateFolderPath) && fs.existsSync(configFilePath)) {
@@ -159,17 +195,14 @@ fs.readFile(configFilePath, "utf8", (err, data) => {
     return;
   }
 
-  console.log("File opened");
+  console.log("Config File opened");
 
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
 
   let previousReceiptDateExists = false;
+  let VATNumberExists = false;
 
   const lines = data.split("\n");
-  let updatedData = "";
+  let updatedData = data.trim() + "\n"; // Start with existing data and add a new line
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
@@ -178,7 +211,14 @@ fs.readFile(configFilePath, "utf8", (err, data) => {
       previousReceiptDateExists = true;
     }
 
-    updatedData += line + "\n";
+    if (line.match(/^VATNumber:/i)) {
+      VATNumberExists = true;
+    }
+  }
+
+  if (!VATNumberExists) {
+    const vatNumber = "test12345";
+    updatedData += `VATNumber: ${vatNumber}\n`;
   }
 
   if (!previousReceiptDateExists) {
@@ -186,35 +226,25 @@ fs.readFile(configFilePath, "utf8", (err, data) => {
     updatedData += `PreviousReceiptDate: ${currentDate}\n`;
   }
 
-  fs.writeFile(configFilePath, updatedData, "utf8", (err) => {
-    if (err) {
-      console.error("Error saving the file:", err);
-      console.error("Update failed!");
-    } else {
-      console.log("Update Settings successful!");
-      console.log("Update Config successful");
-      console.log("Files SAVED successfully.");
-
-      process.stdin.setRawMode(true);
-      process.stdin.resume();
-      process.stdin.setEncoding("utf8");
-      console.log("");
+  if (!VATNumberExists || !previousReceiptDateExists) {
+    fs.writeFile(configFilePath, updatedData, "utf8", (err) => {
+      if (err) {
+        console.error("Error saving the file:", err);
+        console.error("Update failed!");
+      } else {
+        console.log("Update Settings successful!");
+        console.log("Update Config successful");
+        console.log("Files SAVED successfully.");
+     
+      }
+    });
+  } else {
+    console.log("VATNumber and PreviousReceiptDate already exist. No changes made.");
+    
+  }
  
-      console.log("Press 'y' key to close the program.");
-
-      process.stdin.on("keypress", (key) => {
-        if (key === "y") {
-          console.log("");
-          console.log("You can now fiscalize in ZiG ;)");
-          console.log("UPGRADE DONE!!");
-          process.stdin.pause();
-          process.stdin.removeAllListeners("keypress");
-          process.stdin.setRawMode(false);
-          process.exit();
-        }
-      });
-    }
-  });
+  
+ 
 });
 // Continue with the rest of the code for the target drive
 
@@ -237,3 +267,5 @@ function getWindowsDrives() {
 function getUnixDrives() {
   return fs.readdirSync("/").map((entry) => path.join("/", entry));
 }
+
+
