@@ -3,7 +3,7 @@ const path = require("path");
 const os = require("os");
 const readline = require("readline");
 const https = require("https");
-const axios = require("axios");
+const request = require("request")
 
 
 
@@ -88,8 +88,6 @@ fs.readFile(configFilePath, "utf8", (err, data) => {
   if (deviceID) {
     console.log("Device ID:", deviceID);
 //start
-console.log(certificateFolderPath)
-console.log(configFilePath)
 
 const certificatePath = path.join( certificateFolderPath , "cert.crt");
 const privateKeyPath = path.join(certificateFolderPath , "key.key");
@@ -107,21 +105,32 @@ const agentOptions = {
 const agent = new https.Agent(agentOptions);
 
 // Create an instance of axios with the agent
-const axiosInstance = axios.create({
-  httpsAgent: agent,
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout
 });
+//new way tosend the request
+const requestOptions = {
+  url: `https://fdmsapitest.zimra.co.zw/Device/v1/${deviceID}/GetStatus`,
+  method: 'GET',
+  agent: agent,
+  headers: {
+    'DeviceModelName': 'Revmax', // Example header
+    'DeviceModelVersion': 'v1' // Example header
+    // Add any additional headers you require
+  }
+};
 
-// Send a request using axios
-axiosInstance
-  .get(`https://fdmsapitest.zimra.co.zw/Device/v1/${deviceID}/GetStatus`, {
-    headers: {
-      DeviceModelName: "Revmax",
-      DeviceModelVersion: "v1",
-    },
-  })
-  .then((response) => {
-    const data = response.data;
+request(requestOptions, (error, response, body) => {
+  if (error) {
+  console.error(error);
+  rl.question('Press Enter to exit...', () => {
+    rl.close();
+  });
+  } else {
+    const data = JSON.parse(body);
     const fiscalDayStatus = data.fiscalDayStatus;
+
 
     if (fiscalDayStatus === "FiscalDayClosed") {
       console.log("Fiscal Day is Closed" );
@@ -387,9 +396,15 @@ fs.readFile(filePath, "utf8", (err, data) => {
     } else {
       console.log("To perform this upgrade the Fiscal Day has to be closed");
       console.log("Please Generate Z Report to close the current day, then try again.");
-      console.log("You can close the program ")
+      rl.question('Press Enter to exit...', () => {
+        rl.close();
+      });
     }
-  });
+  }
+})
+
+
+
 
 //end
   } else {
